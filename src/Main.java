@@ -38,11 +38,17 @@ public class Main
                 .help("Reference image file.");
         sub_compare.addArgument("image").nargs("+")
                 .help("Image files to compare to reference.");
+        sub_compare.addArgument("-d", "--degree").nargs(1)
+                .help("Sets the degree of the hash " +
+                        "(number of subdivisions, resolution count)")
+                .setDefault(2);
         
         // Hash
         sub_hash.addArgument("image").help("Image file to hash.");
-        sub_hash.addArgument("degree").help("Sets the degree of the hash "
-                + "(number of subdivisions, tree depth)").setDefault(4);
+        sub_hash.addArgument("-d", "--degree").nargs(1)
+                .help("Sets the degree of the hash " +
+                        "(number of subdivisions, resolution count)")
+                .setDefault(2);
             
         Namespace arg_ns;
         try

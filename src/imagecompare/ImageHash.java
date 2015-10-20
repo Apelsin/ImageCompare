@@ -25,6 +25,11 @@ public class ImageHash implements Comparable<ImageHash>
     @Override
     public int compareTo(ImageHash o)
     {
+        return Difference(o, false);
+    }
+    
+    public int Difference(ImageHash o, boolean absolute)
+    {
         int color_index = 0;
         int total_difference = 0;
         // i is resolution
@@ -34,26 +39,42 @@ public class ImageHash implements Comparable<ImageHash>
             int ii = 2 * i;
             // How many pixels in this resolution
             int colors = 1 << ii;
-            // How much this resolution affects total_difference
-            // Give headroom for each sum of pixel differences per resolution
-            int level = 20 - ii;
             // For each pixel in the color data
             for(int j = 0; j < colors; j++)
             {
-                if(i < _ColorData.length && i < o._ColorData.length)
+                int idx_byte = 3 * color_index;
+                if(idx_byte < _ColorData.length && idx_byte < o._ColorData.length)
                 {
                     int difference = 0;
-                    int idx_b = 3 * color_index;
-                    int idx_g = idx_b + 1;
-                    int idx_r = idx_b + 2;
-                    difference +=
-                            ((int)o._ColorData[3 * color_index]) -
-                            ((int)_ColorData[3 * color_index]) + 
-                            ((int)o._ColorData[3 * color_index + 1]) -
-                            ((int)_ColorData[3 * color_index + 1]) + 
-                            ((int)o._ColorData[3 * color_index + 2]) -
-                            ((int)_ColorData[3 * color_index + 2]);
-                    total_difference += difference << level;
+                    int idx_b = idx_byte;
+                    int idx_g = idx_byte + 1;
+                    int idx_r = idx_byte + 2;
+                    // BGR channel differences simply added together
+                    if(absolute)
+                    {
+                        difference +=
+                                Math.abs((int)o._ColorData[idx_b] -
+                                ((int)_ColorData[idx_b])) + 
+                                Math.abs((int)o._ColorData[idx_g] -
+                                ((int)_ColorData[idx_g])) + 
+                                Math.abs((int)o._ColorData[idx_r] -
+                                ((int)_ColorData[idx_r]));
+                    }
+                    else
+                    {
+                        difference +=
+                                ((int)o._ColorData[idx_b]) -
+                                ((int)_ColorData[idx_b]) + 
+                                ((int)o._ColorData[idx_g]) -
+                                ((int)_ColorData[idx_g]) + 
+                                ((int)o._ColorData[idx_r]) -
+                                ((int)_ColorData[idx_r]);
+                    }
+                    // Be stupid and just add the color difference for each 
+                    // resolution level together to the total difference 
+                    // without weighing it at all.
+                    // TODO: How to weigh each resolution??
+                    total_difference += difference;
                     color_index++;
                 }
                 else
@@ -61,6 +82,7 @@ public class ImageHash implements Comparable<ImageHash>
             }
         }
     }
+    
     public static ImageHash CreateFromImage(
             BufferedImage original_image, int resolution)
     {

@@ -41,12 +41,14 @@ public class Commands
             ImageHash hash_reference = ImageHash.CreateFromImage(image, degree);
             ImageHash hash_image_0 = ImageHash.CreateFromImage(image_0, degree);
             
-            System.out.print("Reference: ");
+            System.out.print(" Reference: ");
             hash_reference.Print(System.out);
             System.out.println();
-            System.out.print("  Image 0: ");
+            System.out.print("   Image 0: ");
             hash_image_0.Print(System.out);
             System.out.println();
+            System.out.print("Difference: ");
+            System.out.println(hash_reference.Difference(hash_image_0, true));
         }
     }
     public static void Hash(Namespace arg_ns) throws IOException
