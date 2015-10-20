@@ -1,0 +1,4 @@
+ImageCompare
+=====
+
+TODO: Readme!
