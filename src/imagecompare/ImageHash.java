@@ -6,111 +6,174 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 
-import java.io.PrintStream;
 import java.util.Base64;
 
 public class ImageHash implements Comparable<ImageHash>
 {
-    byte[] _ColorData;
+    private byte[] _ColorData;
+    private int _Degree;
     protected ImageHash()
     {
     }
     
+    @SuppressWarnings("empty-statement")
     protected ImageHash(byte[] color_data)
     {
         this();
         _ColorData = color_data;
+        if(_ColorData != null)
+        {
+            // Calculate the degree of _ColorData
+            int colors_count = _ColorData.length / 3;
+            _Degree = 0;
+            while(1 << (2 *_Degree + 1) <= colors_count)
+                _Degree++;
+        }
+    }
+    
+    protected ImageHash(byte[] color_data, int degree)
+    {
+        this();
+        _ColorData = color_data;
+        _Degree = degree;
+    }
+    
+    public int GetDegree()
+    {
+        return _Degree;
     }
     
     @Override
     public int compareTo(ImageHash o)
     {
-        return Difference(o, false);
+        Float difference = Difference(o, DifferenceMode.Subtract);
+        if(difference > 0)
+            return 1;
+        else if(difference < 0)
+            return -1;
+        return 0;
     }
     
-    public int Difference(ImageHash o, boolean absolute)
+    public enum DifferenceMode
     {
-        int color_index = 0;
-        int total_difference = 0;
-        // i is resolution
-        for(int i = 0;;i++)
+        Subtract,
+        Absolute,
+        RootMeanSquare,
+    }
+    
+    public float DifferenceMultiResolution(ImageHash o, DifferenceMode mode)
+    {
+        float difference = Difference(o, mode);
+        BufferedImage this_image = GetImage();
+        BufferedImage o_image = o.GetImage();
+        for(int i = _Degree - 1; i >= 0; i--)
         {
-            // Two times i
-            int ii = 2 * i;
-            // How many pixels in this resolution
-            int colors = 1 << ii;
-            // For each pixel in the color data
-            for(int j = 0; j < colors; j++)
+            int colors_count = 1 << (2 * i);
+            ImageHash this_reduced = ImageHash.CreateFromImage(this_image, i);
+            ImageHash o_reduced = ImageHash.CreateFromImage(o_image, i);
+            difference += this_reduced.Difference(o_reduced, mode);
+        }
+        return difference / _Degree;
+    }
+    
+    public BufferedImage GetImage()
+    {
+        int n = 1 << _Degree;
+        BufferedImage image = new BufferedImage(n, n, BufferedImage.TYPE_3BYTE_BGR);
+        byte[] buffer = ((DataBufferByte)image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(_ColorData, 0, buffer, 0, _ColorData.length);
+        return image;
+    }
+    
+    public float Difference(ImageHash o, DifferenceMode mode)
+    {
+        // Counting differences
+        float difference = 0;
+        
+        // TODO: if hashes are of different degrees (length), reduce the hash 
+        // of higher degree to the same degree of the other
+        
+        // System.out.println("this._Degree = " + this._Degree);
+        
+        int min_degree = Math.min(this._Degree,  o._Degree);
+        int colors_count = 1 << (2 * min_degree);
+        int difference_divisor = 0x300 * colors_count;
+        
+        //System.out.println("colors_count = " + colors_count);
+        
+        for(int i = 0; i < colors_count; i++)
+        {
+            int idx_b = 3 * i;
+            int idx_g = idx_b + 1;
+            int idx_r = idx_b + 2;
+            
+            int diff_b = ((int)o._ColorData[idx_b]) - ((int)_ColorData[idx_b]);
+            int diff_g = ((int)o._ColorData[idx_g]) - ((int)_ColorData[idx_g]);
+            int diff_r = ((int)o._ColorData[idx_r]) - ((int)_ColorData[idx_r]);
+            
+            switch(mode)
             {
-                int idx_byte = 3 * color_index;
-                if(idx_byte < _ColorData.length && idx_byte < o._ColorData.length)
-                {
-                    int difference = 0;
-                    int idx_b = idx_byte;
-                    int idx_g = idx_byte + 1;
-                    int idx_r = idx_byte + 2;
-                    // BGR channel differences simply added together
-                    if(absolute)
-                    {
-                        difference +=
-                                Math.abs((int)o._ColorData[idx_b] -
-                                ((int)_ColorData[idx_b])) + 
-                                Math.abs((int)o._ColorData[idx_g] -
-                                ((int)_ColorData[idx_g])) + 
-                                Math.abs((int)o._ColorData[idx_r] -
-                                ((int)_ColorData[idx_r]));
-                    }
-                    else
-                    {
-                        difference +=
-                                ((int)o._ColorData[idx_b]) -
-                                ((int)_ColorData[idx_b]) + 
-                                ((int)o._ColorData[idx_g]) -
-                                ((int)_ColorData[idx_g]) + 
-                                ((int)o._ColorData[idx_r]) -
-                                ((int)_ColorData[idx_r]);
-                    }
-                    // Be stupid and just add the color difference for each 
-                    // resolution level together to the total difference 
-                    // without weighing it at all.
-                    // TODO: How to weigh each resolution??
-                    total_difference += difference;
-                    color_index++;
-                }
-                else
-                    return total_difference;
+                default:
+                case Subtract:
+                    difference +=
+                            diff_b +
+                            diff_g +
+                            diff_r;
+                break;
+                case Absolute:
+                    difference +=
+                            Math.abs(diff_b) +
+                            Math.abs(diff_g) +
+                            Math.abs(diff_r);
+                    
+                break;
+                case RootMeanSquare:
+                    difference +=
+                            diff_b * diff_b +
+                            diff_g * diff_g +
+                            diff_r * diff_r;
+                break;
             }
+        }
+        float mean = (float)difference / (float)difference_divisor;
+        switch(mode)
+        {
+            default:
+            case Subtract:
+            case Absolute:
+                return mean;
+            case RootMeanSquare:
+                return (float)Math.sqrt(mean / (float)difference_divisor);
         }
     }
     
     public static ImageHash CreateFromImage(
-            BufferedImage original_image, int resolution)
+            BufferedImage original_image, int degree)
     {
-        resolution = Math.max(1, resolution);
-        // Given a resolution d, we will need an array of size
-        // 3 * sum 2^(2k) for k 0..d
-        int colors_count = 0;
-        for(int i = resolution; i >= 0; i--)
-            colors_count += (1 << (2 * i));
+        degree = Math.max(0, degree);
+        // Given a resolution d, we will need an array of size 2^(2d)
+        int n = 1 << degree;
+        int colors_count = 1 << (2 * degree);
         byte[] color_data = new byte[3 * colors_count];
-        // Start with the original
-        BufferedImage resized = original_image;
-        int color_index = colors_count;
-        for(int i = resolution; i >= 0; i--)
-        {
-            int n = 1 << i;
-            color_index -= 1 << (2 * i);
-            resized = WriteResizedImageToColorArray(
-                    resized,
-                    BufferedImage.TYPE_3BYTE_BGR,
-                    color_data,
-                    n,
-                    n,
-                    3 * color_index);
-        }
+        // Take the original image and resize it to n*n
+        WriteResizedImageToColorArray(
+                original_image,
+                BufferedImage.TYPE_3BYTE_BGR,
+                color_data,
+                n,
+                n,
+                0);
+        return new ImageHash(color_data, degree);
+    }
+    
+    public static ImageHash CreateFromBase64String(String b64)
+    {
+        Base64.Decoder decoder = Base64.getDecoder();
+        byte[] color_data = decoder.decode(b64);
         return new ImageHash(color_data);
     }
     
+    // <editor-fold defaultstate="collapsed" desc="Array Writing">
     private static BufferedImage WriteResizedImageToColorArray(
             BufferedImage image,
             int color_format,
@@ -152,10 +215,11 @@ public class ImageHash implements Comparable<ImageHash>
         }
        
     }
+    // </editor-fold>
     
-    public void Print(PrintStream stream)
+    public String GetBase64String()
     {
         Base64.Encoder encoder = Base64.getEncoder();
-        stream.print(encoder.encodeToString(_ColorData));
+        return encoder.encodeToString(_ColorData);
     }
 }

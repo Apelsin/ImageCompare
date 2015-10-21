@@ -36,16 +36,16 @@ public class Main
                 .help("Supply the reference hash rather than calculating it.");
         mutex.addArgument("-r", "--reference")
                 .help("Reference image file.");
-        sub_compare.addArgument("image").nargs("+")
+        sub_compare.addArgument("images").metavar("image").nargs("+")
                 .help("Image files to compare to reference.");
-        sub_compare.addArgument("-d", "--degree").nargs(1)
+        sub_compare.addArgument("-d", "--degree")
                 .help("Sets the degree of the hash " +
                         "(number of subdivisions, resolution count)")
                 .setDefault(2);
         
         // Hash
         sub_hash.addArgument("image").help("Image file to hash.");
-        sub_hash.addArgument("-d", "--degree").nargs(1)
+        sub_hash.addArgument("-d", "--degree")
                 .help("Sets the degree of the hash " +
                         "(number of subdivisions, resolution count)")
                 .setDefault(2);

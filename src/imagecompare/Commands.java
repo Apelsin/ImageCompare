@@ -21,7 +21,7 @@ public class Commands
         {
             // Compare reference image with images
             String reference_image_path = arg_ns.getString("reference");
-            List<String> image_paths = arg_ns.getList("image");
+            List<String> image_paths = arg_ns.getList("images");
             int degree;
             try
             {
@@ -42,13 +42,16 @@ public class Commands
             ImageHash hash_image_0 = ImageHash.CreateFromImage(image_0, degree);
             
             System.out.print(" Reference: ");
-            hash_reference.Print(System.out);
-            System.out.println();
+            System.out.println(hash_reference.GetBase64String());
             System.out.print("   Image 0: ");
-            hash_image_0.Print(System.out);
-            System.out.println();
-            System.out.print("Difference: ");
-            System.out.println(hash_reference.Difference(hash_image_0, true));
+            System.out.println(hash_image_0.GetBase64String());
+            System.out.print("Similarity: ");
+            float difference = hash_reference.DifferenceMultiResolution(
+                    hash_image_0, ImageHash.DifferenceMode.Absolute);
+            float similarity = 1f - difference;
+            String percentage = String.format("%.2f", 100f * similarity);
+            percentage = percentage.replaceAll("\\.0+$", "");
+            System.out.println(percentage + "%");
         }
     }
     public static void Hash(Namespace arg_ns) throws IOException
@@ -68,8 +71,7 @@ public class Commands
         BufferedImage image = ImageIO.read(image_file);
         
         ImageHash hash = ImageHash.CreateFromImage(image, degree);
-        hash.Print(System.out);
-        System.out.println();
+        System.out.println(hash.GetBase64String());
     }
     public static void Test(Namespace arg_ns)
     {
