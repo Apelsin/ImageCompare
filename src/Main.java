@@ -1,8 +1,6 @@
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.*;
 
-import imagecompare.Commands;
-
 public class Main
 {
     private enum Command

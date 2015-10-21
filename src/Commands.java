@@ -1,10 +1,10 @@
-package imagecompare;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import javax.imageio.ImageIO;
+
+import imagecompare.ImageHash;
 
 import net.sourceforge.argparse4j.inf.Namespace;
 
