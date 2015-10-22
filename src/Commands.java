@@ -20,38 +20,55 @@ public class Commands
         else
         {
             // Compare reference image with images
-            String reference_image_path = arg_ns.getString("reference");
-            List<String> image_paths = arg_ns.getList("images");
-            int degree;
-            try
-            {
-                degree = Integer.parseInt(arg_ns.getString("degree"));
-            }
-            catch(NumberFormatException ex)
-            {
-                degree = 2;
-            }
-
-            File reference_image_file = new File(reference_image_path);
-            BufferedImage image = ImageIO.read(reference_image_file);
+            String path_image_reference = arg_ns.getString("reference");
+            List<String> paths_images = arg_ns.getList("images");
             
-            File image_file_0 = new File(image_paths.get(0));
-            BufferedImage image_0 = ImageIO.read(image_file_0);
-
-            ImageHash hash_reference = ImageHash.CreateFromImage(image, degree);
-            ImageHash hash_image_0 = ImageHash.CreateFromImage(image_0, degree);
+            int degree = Integer.parseInt(arg_ns.getString("degree"));
             
-            System.out.print(" Reference: ");
-            System.out.println(hash_reference.GetBase64String());
-            System.out.print("   Image 0: ");
-            System.out.println(hash_image_0.GetBase64String());
-            System.out.print("Similarity: ");
-            float difference = hash_reference.DifferenceMultiResolution(
-                    hash_image_0, ImageHash.DifferenceMode.Absolute);
-            float similarity = 1f - difference;
-            String percentage = String.format("%.2f", 100f * similarity);
-            percentage = percentage.replaceAll("\\.0+$", "");
-            System.out.println(percentage + "%");
+            File file_image_reference = new File(path_image_reference);
+            BufferedImage image_reference = ImageIO.read(file_image_reference);
+            ImageHash hash_reference = ImageHash.CreateFromImage(image_reference, degree);
+            
+            int zero_count = (int)Math.ceil(Math.log10(paths_images.size()));
+            
+            int width = 10;
+            
+            String format_image_number;
+            if(zero_count > 0)
+                format_image_number = "%0" + zero_count + "d";
+            else
+                format_image_number = "%d";
+            String format_line = "%" + width + "s: %s";
+            
+            System.out.println(String.format(
+                    format_line,
+                    "Reference",
+                    hash_reference.GetBase64String()));
+            
+            for(int i = 0; i < paths_images.size(); i++)
+            {
+                String path_image = paths_images.get(i);
+                File file_image = new File(path_image);
+                BufferedImage image = ImageIO.read(file_image);
+                ImageHash hash = ImageHash.CreateFromImage(image, degree);
+                
+                String image_number = String.format(format_image_number, i);
+                System.out.println(String.format(
+                        format_line,
+                        "Image " + image_number,
+                        hash.GetBase64String()));
+                
+                float difference = hash_reference.DifferenceMultiResolution(
+                        hash, ImageHash.DifferenceMode.Absolute);
+                float similarity = 1f - difference;
+                String percentage = String.format("%.2f", 100f * similarity);
+                percentage = percentage.replaceAll("\\.0+$", "");
+                
+                System.out.println(String.format(
+                        format_line,
+                        "Similarity",
+                        percentage));
+            }
         }
     }
     public static void Hash(Namespace arg_ns) throws IOException
