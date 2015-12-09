@@ -1,0 +1,54 @@
+<Project>
+  <Name>ImageCompare</Name>
+  <ProjectItem type="NClass.DiagramEditor.ClassDiagram.Diagram" assembly="NClass.DiagramEditor, Version=2.4.1823.0, Culture=neutral, PublicKeyToken=null">
+    <Name>Untitled</Name>
+    <Language>Java</Language>
+    <Entities>
+      <Entity type="Class">
+        <Name>ImageHash</Name>
+        <Access>Public</Access>
+        <Location left="156" top="316" />
+        <Size width="407" height="216" />
+        <Collapsed>False</Collapsed>
+        <Member type="Constructor">protected ImageHash(byte[] color_data, int degree)</Member>
+        <Member type="Method">public void GetImage()</Member>
+        <Member type="Method">public int GetDegree()</Member>
+        <Member type="Method">public String GetBase64String()</Member>
+        <Member type="Method">public static ImageHash CreateFromImage(BufferedImage original_image, int degree)</Member>
+        <Member type="Method">public static ImageHash CreateFromBase64String(String b64)</Member>
+        <Member type="Method">public float Difference(ImageHash o, DifferenceMode mode)</Member>
+        <Member type="Method">public float DifferenceMultiResolution(ImageHash o, DifferenceMode mode)</Member>
+        <Modifier>None</Modifier>
+      </Entity>
+      <Entity type="Interface">
+        <Name>Comparable_ImageHash_</Name>
+        <Access>Public</Access>
+        <Location left="156" top="212" />
+        <Size width="187" height="216" />
+        <Collapsed>True</Collapsed>
+      </Entity>
+      <Entity type="Enum">
+        <Name>DifferenceMode</Name>
+        <Access>Public</Access>
+        <Location left="617" top="316" />
+        <Size width="162" height="216" />
+        <Collapsed>False</Collapsed>
+        <Value>Subtract</Value>
+        <Value>Absolute</Value>
+        <Value>RootMeanSquare</Value>
+      </Entity>
+    </Entities>
+    <Relationships>
+      <Relationship type="Dependency" first="0" second="1">
+        <Label>
+        </Label>
+        <StartOrientation>Vertical</StartOrientation>
+        <EndOrientation>Vertical</EndOrientation>
+      </Relationship>
+      <Relationship type="Nesting" first="0" second="2">
+        <StartOrientation>Horizontal</StartOrientation>
+        <EndOrientation>Horizontal</EndOrientation>
+      </Relationship>
+    </Relationships>
+  </ProjectItem>
+</Project>
