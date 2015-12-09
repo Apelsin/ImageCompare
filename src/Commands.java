@@ -61,7 +61,7 @@ public class Commands
                 float difference = hash_reference.DifferenceMultiResolution(
                         hash, ImageHash.DifferenceMode.Absolute);
                 float similarity = 1f - difference;
-                String percentage = String.format("%.2f", 100f * similarity);
+                String percentage = String.format("%.2f%%", 100f * similarity);
                 percentage = percentage.replaceAll("\\.0+$", "");
                 
                 System.out.println(String.format(
